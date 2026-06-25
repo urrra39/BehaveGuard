@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "behaveguard"
+version = "1.0.0"
+description = "Runtime behavioral anomaly detection for Linux processes using eBPF and ML"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+keywords = ["security", "ebpf", "anomaly-detection", "linux", "malware"]
+authors = [{ name = "urrra39" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+
+[project.scripts]
+behaveguard = "behaveguard.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/urrra39/BehaveGuard"
+Issues = "https://github.com/urrra39/BehaveGuard/issues"
+
+# Core dependencies are sourced from requirements.txt so the two files never drift.
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["behaveguard*"]
+
+[tool.setuptools.package-data]
+behaveguard = ["collector/programs/*.c", "config/*.yaml"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=behaveguard --cov-report=term-missing --cov-fail-under=85"

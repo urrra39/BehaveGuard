@@ -1,0 +1,46 @@
+collection:
+  ring_buffer_size_mb: 256
+  event_batch_size: 1000
+  poll_interval_ms: 100
+
+features:
+  window_seconds: 30
+  sequence_length: 20
+  syscall_ngram_n: 2
+
+models:
+  hidden_dim: 128
+  latent_dim: 32
+  num_lstm_layers: 2
+  epochs: 100
+  learning_rate: 0.001
+  batch_size: 32
+
+scoring:
+  lstm_weight: 0.6
+  vae_weight: 0.4
+  alert_threshold_high: 70
+  alert_threshold_critical: 90
+
+alerts:
+  dedup_window_seconds: 300
+  max_alerts_per_minute: 10
+  channels:
+    - type: webhook
+      url: ""  # Set via env var BEHAVEGUARD_WEBHOOK_URL
+    - type: syslog
+      enabled: true
+
+api:
+  host: "0.0.0.0"
+  port: 8888
+
+dashboard:
+  host: "0.0.0.0"
+  port: 8050
+  update_interval_ms: 5000
+
+storage:
+  backend: "sqlite"  # or "influxdb"
+  sqlite_path: "/var/lib/behaveguard/events.db"
+  retention_days: 30
