@@ -1,0 +1,39 @@
+# BehaveGuard - eBPF + ML Linux anomaly detector
+#
+# eBPF instruments the HOST kernel, so this stack runs privileged, on the host
+# network and PID namespaces, with host kernel sources/modules mounted read-only.
+# BCC needs /lib/modules and /usr/src (host kernel headers) to compile BPF at
+# runtime; /sys/fs/bpf is the BPF filesystem; /proc is the host process tree.
+
+services:
+  behaveguard:
+    build: .
+    container_name: behaveguard
+    # eBPF program loading requires full privileges (SYS_ADMIN/NET_ADMIN + more).
+    privileged: true
+    # Observe the real host: its network stack and process table.
+    network_mode: host
+    pid: host
+    volumes:
+      # Host kernel modules + sources so BCC can compile BPF against the HOST kernel.
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
+      # Pinned BPF objects / maps.
+      - /sys/fs/bpf:/sys/fs/bpf
+      # Host process tree for PID/process resolution.
+      - /proc:/proc:ro
+      # Persistent state: trained models, baselines, alert history.
+      - behaveguard_data:/var/lib/behaveguard
+    environment:
+      BEHAVEGUARD_LOG_LEVEL: INFO
+      # Optional outbound alert webhook; empty disables webhook delivery.
+      BEHAVEGUARD_WEBHOOK_URL: ${WEBHOOK_URL:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  behaveguard_data:

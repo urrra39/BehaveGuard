@@ -11,11 +11,14 @@ way.
 from __future__ import annotations
 
 import math
-from typing import List
+from typing import List, Optional
 
-from behaveguard.collector.event_types import SENSITIVE_PATHS, FileEvent
+from behaveguard.collector.event_types import SENSITIVE_PATHS, AntiforensicEvent, FileEvent
 
 CAP_FILES = 50.0
+# Even a single log deletion/timestomp is significant; cap low so a few events
+# already drive the feature toward 1.0.
+CAP_ANTIFORENSIC = 5.0
 
 # Directory prefixes whose contents are sensitive to read/enumerate.
 SYSTEM_DIRS = ("/etc", "/proc", "/sys", "/dev", "/root", "/boot")
@@ -91,13 +94,21 @@ class FileFeatureExtractor:
             "executable_files_opened",
             "files_written_count",
             "entropy_of_file_paths",
+            # Anti-forensic defense layer (/var/log tampering).
+            "log_deletion_count",
+            "timestamp_modification_count",
         ]
 
     @staticmethod
     def dim() -> int:
-        return 5
+        return 7
 
-    def extract(self, events: List[FileEvent], window_seconds: int) -> List[float]:
+    def extract(
+        self,
+        events: List[FileEvent],
+        window_seconds: int,
+        antiforensic_events: Optional[List[AntiforensicEvent]] = None,
+    ) -> List[float]:
         opened = set()
         system_dir_hits = 0
         executable_opens = 0
@@ -119,10 +130,21 @@ class FileFeatureExtractor:
             if _in_system_dir(path) or _is_sensitive(path):
                 system_dir_hits += 1
 
+        # Anti-forensic features: deletions/truncations vs. timestamp tampering.
+        log_deletions = 0
+        timestamp_mods = 0
+        for af in antiforensic_events or []:
+            if af.action in ("unlink", "truncate"):
+                log_deletions += 1
+            elif af.action == "timestomp":
+                timestamp_mods += 1
+
         return [
             _saturate(len(opened), CAP_FILES),
             _saturate(system_dir_hits, CAP_FILES),
             _saturate(executable_opens, CAP_FILES),
             _saturate(writes, CAP_FILES),
             _path_entropy(paths),
+            _saturate(log_deletions, CAP_ANTIFORENSIC),
+            _saturate(timestamp_mods, CAP_ANTIFORENSIC),
         ]

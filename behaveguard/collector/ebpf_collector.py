@@ -20,8 +20,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Tuple
 
 from behaveguard.collector.event_types import (
+    AntiforensicEvent,
+    AntiforensicEventRaw,
+    ContainerEscapeEvent,
+    ContainerEscapeEventRaw,
+    DnsTunnelEvent,
+    DnsTunnelEventRaw,
     FileEvent,
     FileEventRaw,
+    InjectionEvent,
+    InjectionEventRaw,
+    LolbinEvent,
+    LolbinEventRaw,
     NetworkEvent,
     NetworkEventRaw,
     ProcessEvent,
@@ -45,6 +55,12 @@ PROGRAM_SPECS: List[Tuple[str, str, str]] = [
     ("network_monitor.c", "network_events", "_parse_network_event"),
     ("file_monitor.c", "file_events", "_parse_file_event"),
     ("process_monitor.c", "process_events", "_parse_process_event"),
+    # Advanced defense layers.
+    ("injection_monitor.c", "injection_events", "_parse_injection_event"),
+    ("container_escape_monitor.c", "container_events", "_parse_container_escape_event"),
+    ("lolbin_monitor.c", "lolbin_events", "_parse_lolbin_event"),
+    ("antiforensic_monitor.c", "antiforensic_events", "_parse_antiforensic_event"),
+    ("dns_tunnel_monitor.c", "dns_tunnel_events", "_parse_dns_tunnel_event"),
 ]
 
 
@@ -73,19 +89,36 @@ class EBPFCollector:
         own_pid = os.getpid()
         cflags = [f"-DOWN_PID={own_pid}"]
 
+        # Load each program defensively: a kernel that lacks a particular hook
+        # symbol (e.g. an LSM disabled, or a tracepoint missing on an older
+        # build) must degrade gracefully — that one layer is skipped while every
+        # other layer keeps running, rather than aborting the whole collector.
         for filename, _table, _parser in PROGRAM_SPECS:
-            source = (PROGRAMS_DIR / filename).read_text(encoding="utf-8")
-            logger.info("loading eBPF program %s", filename)
-            self._bpf_objects[filename] = BPF(text=source, cflags=cflags)
+            try:
+                source = (PROGRAMS_DIR / filename).read_text(encoding="utf-8")
+                self._bpf_objects[filename] = BPF(text=source, cflags=cflags)
+                logger.info("loaded eBPF program %s", filename)
+            except Exception as exc:  # noqa: BLE001 - one bad layer must not be fatal
+                logger.warning("skipping eBPF program %s: %s", filename, exc)
+
+        if not self._bpf_objects:
+            raise RuntimeError("no eBPF programs could be loaded")
 
         poll_ms = int(self.config.collection.poll_interval_ms)
         self._reader = RingBufferReader(self._bpf_objects, self._queue, poll_ms)
         for filename, table, parser_name in PROGRAM_SPECS:
-            self._reader.register(filename, table, getattr(self, parser_name))
+            if filename not in self._bpf_objects:
+                continue  # this layer failed to load; nothing to subscribe to
+            try:
+                self._reader.register(filename, table, getattr(self, parser_name))
+            except Exception as exc:  # noqa: BLE001 - tolerate a missing ring buffer
+                logger.warning("skipping ring buffer for %s: %s", filename, exc)
 
         await self._reader.start(asyncio.get_event_loop())
         self.running = True
-        logger.info("eBPF collector started (own_pid=%d)", own_pid)
+        logger.info(
+            "eBPF collector started (own_pid=%d, layers=%d)", own_pid, len(self._bpf_objects)
+        )
 
     async def stop(self) -> None:
         """Stop polling, detach all probes, and release kernel resources."""
@@ -133,3 +166,23 @@ class EBPFCollector:
     def _parse_process_event(self, ctx: Any, data: Any, size: int) -> ProcessEvent:
         raw = ctypes.cast(data, ctypes.POINTER(ProcessEventRaw)).contents
         return ProcessEvent.from_raw(raw)
+
+    def _parse_injection_event(self, ctx: Any, data: Any, size: int) -> InjectionEvent:
+        raw = ctypes.cast(data, ctypes.POINTER(InjectionEventRaw)).contents
+        return InjectionEvent.from_raw(raw)
+
+    def _parse_container_escape_event(self, ctx: Any, data: Any, size: int) -> ContainerEscapeEvent:
+        raw = ctypes.cast(data, ctypes.POINTER(ContainerEscapeEventRaw)).contents
+        return ContainerEscapeEvent.from_raw(raw)
+
+    def _parse_lolbin_event(self, ctx: Any, data: Any, size: int) -> LolbinEvent:
+        raw = ctypes.cast(data, ctypes.POINTER(LolbinEventRaw)).contents
+        return LolbinEvent.from_raw(raw)
+
+    def _parse_antiforensic_event(self, ctx: Any, data: Any, size: int) -> AntiforensicEvent:
+        raw = ctypes.cast(data, ctypes.POINTER(AntiforensicEventRaw)).contents
+        return AntiforensicEvent.from_raw(raw)
+
+    def _parse_dns_tunnel_event(self, ctx: Any, data: Any, size: int) -> DnsTunnelEvent:
+        raw = ctypes.cast(data, ctypes.POINTER(DnsTunnelEventRaw)).contents
+        return DnsTunnelEvent.from_raw(raw)

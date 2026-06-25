@@ -9,15 +9,21 @@ anonymized C2 and lateral movement respectively.
 from __future__ import annotations
 
 import ipaddress
-from typing import List
+from typing import List, Optional
 
-from behaveguard.collector.event_types import NetworkEvent
+from behaveguard.collector.event_types import DnsTunnelEvent, NetworkEvent
 
 # Saturating caps (value that maps to 1.0).
 CAP_UNIQUE_IPS = 50.0
 CAP_UNIQUE_PORTS = 50.0
 CAP_CONN_RATE = 20.0          # outbound connections / second
 CAP_BYTES_RATE = 1_000_000.0  # bytes / second
+
+# DNS-tunnel caps. A normal DNS query is well under 100 bytes; the eBPF layer
+# only forwards queries already > 100 bytes, so these caps are tuned for the
+# oversized regime that signals tunneling/exfiltration.
+CAP_DNS_SIZE = 512.0          # bytes (EDNS0 max-ish) -> 1.0
+CAP_DNS_RATE = 20.0           # suspicious DNS queries / second -> 1.0
 
 # Ports commonly used by Tor (SOCKS proxy, control, ORPort, dir).
 TOR_PORTS = {9050, 9051, 9001, 9030}
@@ -58,13 +64,22 @@ class NetworkFeatureExtractor:
             "bytes_recv_per_second",
             "is_using_tor_port",
             "is_connecting_to_rfc1918",
+            # DNS-tunnel defense layer.
+            "avg_dns_query_size",
+            "dns_query_rate",
+            "max_dns_payload_bytes",
         ]
 
     @staticmethod
     def dim() -> int:
-        return 7
+        return 10
 
-    def extract(self, events: List[NetworkEvent], window_seconds: int) -> List[float]:
+    def extract(
+        self,
+        events: List[NetworkEvent],
+        window_seconds: int,
+        dns_events: Optional[List[DnsTunnelEvent]] = None,
+    ) -> List[float]:
         seconds = float(max(window_seconds, 1))
 
         remote_ips = set()
@@ -92,6 +107,16 @@ class NetworkFeatureExtractor:
             if _is_rfc1918(dst_ip):
                 hits_rfc1918 = 1.0
 
+        # DNS-tunnel features over the suspicious (oversized) DNS queries.
+        dns = dns_events or []
+        if dns:
+            sizes = [int(e.payload_size) for e in dns]
+            avg_dns = (sum(sizes) / len(sizes))
+            max_dns = max(sizes)
+        else:
+            avg_dns = 0.0
+            max_dns = 0
+
         return [
             _saturate(len(remote_ips), CAP_UNIQUE_IPS),
             _saturate(len(remote_ports), CAP_UNIQUE_PORTS),
@@ -100,4 +125,7 @@ class NetworkFeatureExtractor:
             _saturate(bytes_recv / seconds, CAP_BYTES_RATE),
             uses_tor,
             hits_rfc1918,
+            _saturate(avg_dns, CAP_DNS_SIZE),
+            _saturate(len(dns) / seconds, CAP_DNS_RATE),
+            _saturate(max_dns, CAP_DNS_SIZE),
         ]

@@ -16,7 +16,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List, Optional, Sequence
 
 from behaveguard.collector.event_types import (
+    AntiforensicEvent,
+    ContainerEscapeEvent,
+    DnsTunnelEvent,
     FileEvent,
+    InjectionEvent,
+    LolbinEvent,
     NetworkEvent,
     ProcessEvent,
     RawEvent,
@@ -82,12 +87,25 @@ class FeatureExtractor:
         networks = [e for e in ordered if isinstance(e, NetworkEvent)]
         files = [e for e in ordered if isinstance(e, FileEvent)]
         processes = [e for e in ordered if isinstance(e, ProcessEvent)]
+        # Advanced defense-layer events.
+        injections = [e for e in ordered if isinstance(e, InjectionEvent)]
+        containers = [e for e in ordered if isinstance(e, ContainerEscapeEvent)]
+        lolbins = [e for e in ordered if isinstance(e, LolbinEvent)]
+        antiforensics = [e for e in ordered if isinstance(e, AntiforensicEvent)]
+        dns = [e for e in ordered if isinstance(e, DnsTunnelEvent)]
 
         vector: List[float] = []
         vector += self._syscall.extract(syscalls, ws)
-        vector += self._network.extract(networks, ws)
-        vector += self._file.extract(files, ws)
-        vector += self._process.extract(processes, syscalls, ws)
+        vector += self._network.extract(networks, ws, dns_events=dns)
+        vector += self._file.extract(files, ws, antiforensic_events=antiforensics)
+        vector += self._process.extract(
+            processes,
+            syscalls,
+            ws,
+            injection_events=injections,
+            container_events=containers,
+            lolbin_events=lolbins,
+        )
         vector += self._temporal(ordered, ws)
 
         # Final safety net: clamp to [0, 1] and scrub any NaN/inf.
