@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+
+# ML models (large files — use GitHub Releases instead)
+*.pt
+*.pth
+*.pkl
+~/.behaveguard/
+
+# Test/Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# eBPF compiled objects
+*.o
+*.ll
