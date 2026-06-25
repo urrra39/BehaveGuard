@@ -21,8 +21,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List
 
 from behaveguard.collector.event_types import (
+    AntiforensicEvent,
+    ContainerEscapeEvent,
+    DnsTunnelEvent,
     EventType,
     FileEvent,
+    InjectionEvent,
+    LolbinEvent,
     NetworkEvent,
     ProcessEvent,
     RawEvent,
@@ -37,6 +42,11 @@ _EVENT_CLASSES = {
     EventType.NETWORK: NetworkEvent,
     EventType.FILE: FileEvent,
     EventType.PROCESS: ProcessEvent,
+    EventType.INJECTION: InjectionEvent,
+    EventType.CONTAINER_ESCAPE: ContainerEscapeEvent,
+    EventType.LOLBIN: LolbinEvent,
+    EventType.ANTIFORENSIC: AntiforensicEvent,
+    EventType.DNS_TUNNEL: DnsTunnelEvent,
 }
 
 

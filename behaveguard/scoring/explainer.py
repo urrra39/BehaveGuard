@@ -41,6 +41,30 @@ _PHRASES = {
     "window_duration_ms": "showed an unusual activity span",
     "events_per_second": "generated events at an unusually high rate",
     "cpu_time_ratio": "ran with an unusually high activity duty cycle",
+    # --- advanced defense layers (explicit, decisive callouts) ---
+    "is_injection_target": "is a Process Injection Target (a foreign process is writing its memory)",
+    "namespace_change_count": "changed namespaces — possible Container Escape preparation",
+    "pivot_root_attempt": "made a Container Escape Attempt (pivot_root)",
+    "lolbin_execution_count": "executed Living-Off-The-Land binaries (LOLBins)",
+    "log_deletion_count": "deleted or truncated log files (anti-forensic evidence destruction)",
+    "timestamp_modification_count": "tampered with file timestamps (timestomping)",
+    "avg_dns_query_size": "issued oversized DNS queries",
+    "dns_query_rate": "issued DNS queries at an unusually high rate",
+    "max_dns_payload_bytes": "shows DNS Tunneling Exfiltration (oversized DNS payloads)",
+}
+
+# Advanced defense-layer features are decisive: a single hit should dominate the
+# explanation, so they get a much higher salience than ordinary behavioral drift.
+_CRITICAL_DEFENSE_FEATURES = {
+    "is_injection_target",
+    "pivot_root_attempt",
+    "namespace_change_count",
+    "lolbin_execution_count",
+    "log_deletion_count",
+    "timestamp_modification_count",
+    "avg_dns_query_size",
+    "dns_query_rate",
+    "max_dns_payload_bytes",
 }
 
 
@@ -65,6 +89,10 @@ def _syscall_index(name: str, prefix: str) -> Optional[int]:
 
 def _salience_weight(name: str) -> float:
     """Relative importance of a feature for *explanation* purposes."""
+    if name in _CRITICAL_DEFENSE_FEATURES:
+        return 3.0
+    if name.startswith("lolbin_"):  # one-hot LOLBin flags (e.g. lolbin_nc)
+        return 2.5
     if name in _PHRASES:
         return 1.0
     sys_idx = _syscall_index(name, "syscall_")
@@ -79,6 +107,9 @@ def _phrase_for(name: str) -> str:
     """Human phrase describing an elevated value of ``name``."""
     if name in _PHRASES:
         return _PHRASES[name]
+    if name.startswith("lolbin_"):  # one-hot LOLBin flag for a specific binary
+        binary = name[len("lolbin_"):]
+        return f"executed the LOLBin '{binary}'"
     sys_idx = _syscall_index(name, "syscall_")
     if sys_idx is not None and name.endswith("_freq"):
         return f"elevated use of the {syscall_name(sys_idx)} syscall"

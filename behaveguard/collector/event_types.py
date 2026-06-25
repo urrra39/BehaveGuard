@@ -49,14 +49,27 @@ __all__ = [
     "EventType",
     "FileOperation",
     "ProcessAction",
+    "InjectionMethod",
+    "ContainerAction",
+    "AntiforensicAction",
     "SyscallEventRaw",
     "NetworkEventRaw",
     "FileEventRaw",
     "ProcessEventRaw",
+    "InjectionEventRaw",
+    "ContainerEscapeEventRaw",
+    "LolbinEventRaw",
+    "AntiforensicEventRaw",
+    "DnsTunnelEventRaw",
     "SyscallEvent",
     "NetworkEvent",
     "FileEvent",
     "ProcessEvent",
+    "InjectionEvent",
+    "ContainerEscapeEvent",
+    "LolbinEvent",
+    "AntiforensicEvent",
+    "DnsTunnelEvent",
     "RawEvent",
     "SYSCALL_NAMES",
     "syscall_name",
@@ -98,6 +111,12 @@ class EventType(IntEnum):
     NETWORK = 2
     FILE = 3
     PROCESS = 4
+    # Advanced defense layers.
+    INJECTION = 5
+    CONTAINER_ESCAPE = 6
+    LOLBIN = 7
+    ANTIFORENSIC = 8
+    DNS_TUNNEL = 9
 
 
 class FileOperation(IntEnum):
@@ -115,6 +134,30 @@ class ProcessAction(IntEnum):
     EXEC = 0
     FORK = 1
     EXIT = 2
+
+
+class InjectionMethod(IntEnum):
+    """Process-injection techniques carried in :class:`InjectionEventRaw.method`."""
+
+    PTRACE = 0              # ptrace(PTRACE_ATTACH/POKETEXT...) via security_ptrace
+    PROC_MEM = 1            # write to /proc/<pid>/mem
+    PROCESS_VM_WRITEV = 2   # process_vm_writev() cross-process memory write
+
+
+class ContainerAction(IntEnum):
+    """Namespace/escape actions carried in :class:`ContainerEscapeEventRaw.action`."""
+
+    SETNS = 0
+    UNSHARE = 1
+    PIVOT_ROOT = 2
+
+
+class AntiforensicAction(IntEnum):
+    """Anti-forensic actions carried in :class:`AntiforensicEventRaw.action`."""
+
+    UNLINK = 0       # deletion of a log file
+    TIMESTOMP = 1    # timestamp tampering (utimensat/utimes)
+    TRUNCATE = 2     # truncation/clearing of a log file
 
 
 # ---------------------------------------------------------------------------
@@ -251,6 +294,97 @@ class ProcessEventRaw(ctypes.Structure):
     ]
 
 
+# --- Advanced defense-layer raw structures (must match the new .c programs) ---
+
+
+class InjectionEventRaw(ctypes.Structure):
+    """Binary layout for a process-injection event (40 bytes).
+
+    Emitted by ``injection_monitor.c``. ``method`` follows :class:`InjectionMethod`.
+    ``target_pid`` is the victim (0 when the hook cannot resolve it, e.g. a
+    ``/proc/<pid>/mem`` write).
+    """
+
+    _fields_ = [
+        ("timestamp_ns", ctypes.c_uint64),
+        ("pid", ctypes.c_uint32),
+        ("uid", ctypes.c_uint32),
+        ("target_pid", ctypes.c_uint32),
+        ("method", ctypes.c_uint32),
+        ("comm", ctypes.c_char * TASK_COMM_LEN),
+    ]
+
+
+class ContainerEscapeEventRaw(ctypes.Structure):
+    """Binary layout for a container/namespace-escape event (40 bytes).
+
+    Emitted by ``container_escape_monitor.c``. ``action`` follows
+    :class:`ContainerAction`; ``flags`` carries the syscall flags (setns nstype /
+    unshare flags; 0 for pivot_root).
+    """
+
+    _fields_ = [
+        ("timestamp_ns", ctypes.c_uint64),
+        ("pid", ctypes.c_uint32),
+        ("uid", ctypes.c_uint32),
+        ("action", ctypes.c_uint32),
+        ("flags", ctypes.c_uint32),
+        ("comm", ctypes.c_char * TASK_COMM_LEN),
+    ]
+
+
+class LolbinEventRaw(ctypes.Structure):
+    """Binary layout for a Living-Off-The-Land-Binary execution event (40 bytes).
+
+    Emitted by ``lolbin_monitor.c`` only when the exec'd ``comm`` matches the
+    watchlist.
+    """
+
+    _fields_ = [
+        ("timestamp_ns", ctypes.c_uint64),
+        ("pid", ctypes.c_uint32),
+        ("ppid", ctypes.c_uint32),
+        ("uid", ctypes.c_uint32),
+        ("comm", ctypes.c_char * TASK_COMM_LEN),
+    ]
+
+
+class AntiforensicEventRaw(ctypes.Structure):
+    """Binary layout for an anti-forensic event (296 bytes).
+
+    Emitted by ``antiforensic_monitor.c`` for deletions/timestomps/truncations
+    under ``/var/log``. ``action`` follows :class:`AntiforensicAction`.
+    """
+
+    _fields_ = [
+        ("timestamp_ns", ctypes.c_uint64),
+        ("pid", ctypes.c_uint32),
+        ("uid", ctypes.c_uint32),
+        ("action", ctypes.c_uint32),
+        ("comm", ctypes.c_char * TASK_COMM_LEN),
+        ("path", ctypes.c_char * PATH_MAX_LEN),
+    ]
+
+
+class DnsTunnelEventRaw(ctypes.Structure):
+    """Binary layout for a DNS-tunnel event (48 bytes).
+
+    Emitted by ``dns_tunnel_monitor.c`` for oversized (> 100 byte) UDP/53 queries.
+    ``daddr`` is a raw ``__be32``; ``dport`` is host order (always 53 here);
+    ``payload_size`` is the sendmsg length.
+    """
+
+    _fields_ = [
+        ("timestamp_ns", ctypes.c_uint64),
+        ("pid", ctypes.c_uint32),
+        ("uid", ctypes.c_uint32),
+        ("daddr", ctypes.c_uint32),
+        ("payload_size", ctypes.c_uint32),
+        ("dport", ctypes.c_uint32),
+        ("comm", ctypes.c_char * TASK_COMM_LEN),
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Decoding helpers.
 # ---------------------------------------------------------------------------
@@ -374,6 +508,30 @@ def _process_action_to_str(action: int) -> str:
     """
     try:
         return ProcessAction(action).name.lower()
+    except ValueError:
+        return "action_{0}".format(action)
+
+
+def _injection_method_to_str(method: int) -> str:
+    """Map an :class:`InjectionMethod` code to its lowercase name."""
+    try:
+        return InjectionMethod(method).name.lower()
+    except ValueError:
+        return "method_{0}".format(method)
+
+
+def _container_action_to_str(action: int) -> str:
+    """Map a :class:`ContainerAction` code to its lowercase name."""
+    try:
+        return ContainerAction(action).name.lower()
+    except ValueError:
+        return "action_{0}".format(action)
+
+
+def _antiforensic_action_to_str(action: int) -> str:
+    """Map an :class:`AntiforensicAction` code to its lowercase name."""
+    try:
+        return AntiforensicAction(action).name.lower()
     except ValueError:
         return "action_{0}".format(action)
 
@@ -581,6 +739,126 @@ class ProcessEvent:
             cmdline=_decode_cstr(raw.cmdline),
             action=_process_action_to_str(int(raw.action)),
             exit_code=int(raw.exit_code),
+        )
+
+
+@dataclass
+class InjectionEvent:
+    """A decoded process-injection event (one process writing another's memory)."""
+
+    timestamp_ns: int
+    pid: int
+    uid: int
+    comm: str
+    target_pid: int
+    method: str
+    event_type: EventType = EventType.INJECTION
+
+    @classmethod
+    def from_raw(cls, raw: InjectionEventRaw) -> "InjectionEvent":
+        return cls(
+            timestamp_ns=int(raw.timestamp_ns),
+            pid=int(raw.pid),
+            uid=int(raw.uid),
+            comm=_decode_cstr(raw.comm),
+            target_pid=int(raw.target_pid),
+            method=_injection_method_to_str(int(raw.method)),
+        )
+
+
+@dataclass
+class ContainerEscapeEvent:
+    """A decoded container/namespace-escape attempt (setns/unshare/pivot_root)."""
+
+    timestamp_ns: int
+    pid: int
+    uid: int
+    comm: str
+    action: str
+    flags: int
+    event_type: EventType = EventType.CONTAINER_ESCAPE
+
+    @classmethod
+    def from_raw(cls, raw: ContainerEscapeEventRaw) -> "ContainerEscapeEvent":
+        return cls(
+            timestamp_ns=int(raw.timestamp_ns),
+            pid=int(raw.pid),
+            uid=int(raw.uid),
+            comm=_decode_cstr(raw.comm),
+            action=_container_action_to_str(int(raw.action)),
+            flags=int(raw.flags),
+        )
+
+
+@dataclass
+class LolbinEvent:
+    """A decoded Living-Off-The-Land-Binary execution (watchlist match)."""
+
+    timestamp_ns: int
+    pid: int
+    ppid: int
+    uid: int
+    comm: str
+    event_type: EventType = EventType.LOLBIN
+
+    @classmethod
+    def from_raw(cls, raw: LolbinEventRaw) -> "LolbinEvent":
+        return cls(
+            timestamp_ns=int(raw.timestamp_ns),
+            pid=int(raw.pid),
+            ppid=int(raw.ppid),
+            uid=int(raw.uid),
+            comm=_decode_cstr(raw.comm),
+        )
+
+
+@dataclass
+class AntiforensicEvent:
+    """A decoded anti-forensic action against ``/var/log`` (delete/timestomp/truncate)."""
+
+    timestamp_ns: int
+    pid: int
+    uid: int
+    comm: str
+    action: str
+    path: str
+    event_type: EventType = EventType.ANTIFORENSIC
+
+    @classmethod
+    def from_raw(cls, raw: AntiforensicEventRaw) -> "AntiforensicEvent":
+        return cls(
+            timestamp_ns=int(raw.timestamp_ns),
+            pid=int(raw.pid),
+            uid=int(raw.uid),
+            comm=_decode_cstr(raw.comm),
+            action=_antiforensic_action_to_str(int(raw.action)),
+            path=_decode_cstr(raw.path),
+        )
+
+
+@dataclass
+class DnsTunnelEvent:
+    """A decoded suspected DNS-tunnel query (oversized UDP/53 payload)."""
+
+    timestamp_ns: int
+    pid: int
+    uid: int
+    comm: str
+    dst_ip: str
+    dst_port: int
+    payload_size: int
+    event_type: EventType = EventType.DNS_TUNNEL
+
+    @classmethod
+    def from_raw(cls, raw: DnsTunnelEventRaw) -> "DnsTunnelEvent":
+        return cls(
+            timestamp_ns=int(raw.timestamp_ns),
+            pid=int(raw.pid),
+            uid=int(raw.uid),
+            comm=_decode_cstr(raw.comm),
+            dst_ip=_ipv4_to_str(int(raw.daddr)),
+            dst_port=int(raw.dport),
+            payload_size=int(raw.payload_size),
         )
 
 
@@ -982,4 +1260,14 @@ SENSITIVE_PATHS = [
 # ---------------------------------------------------------------------------
 
 #: Any decoded BehaveGuard event produced by a ``from_raw`` conversion.
-RawEvent = Union[SyscallEvent, NetworkEvent, FileEvent, ProcessEvent]
+RawEvent = Union[
+    SyscallEvent,
+    NetworkEvent,
+    FileEvent,
+    ProcessEvent,
+    InjectionEvent,
+    ContainerEscapeEvent,
+    LolbinEvent,
+    AntiforensicEvent,
+    DnsTunnelEvent,
+]
