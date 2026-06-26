@@ -51,7 +51,6 @@ async def list_processes(request: Request) -> ProcessListResponse:
     state: "AppState" = request.app.state.bg
     summaries: List[ProcessSummary] = []
 
-    collector = getattr(state, "collector", None)
     window_mgr = getattr(state, "window_manager", None)
     if window_mgr is not None:
         for pid in window_mgr.get_all_pids():
@@ -97,9 +96,7 @@ async def process_detail(request: Request, pid: int) -> ProcessDetailResponse:
             event_count = len(events)
             comm = events[-1].comm if events else ""
 
-    return ProcessDetailResponse(
-        pid=pid, comm=comm, event_count=event_count, score_history=history
-    )
+    return ProcessDetailResponse(pid=pid, comm=comm, event_count=event_count, score_history=history)
 
 
 @router.get("/{pid}/events", response_model=EventFeedResponse)

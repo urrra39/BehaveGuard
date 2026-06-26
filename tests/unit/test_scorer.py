@@ -13,7 +13,6 @@ from behaveguard.collector.event_types import (
     FileEvent,
     NetworkEvent,
     ProcessEvent,
-    SyscallEvent,
 )
 from behaveguard.features.extractor import FeatureExtractor
 from behaveguard.models.threshold_tuner import ThresholdTuner
@@ -29,9 +28,9 @@ from behaveguard.scoring import Severity, classify, explain, rank_contributions
         (95.0, Severity.CRITICAL),
         (90.0, Severity.CRITICAL),  # inclusive critical cutoff
         (75.0, Severity.HIGH),
-        (70.0, Severity.HIGH),      # inclusive high cutoff
+        (70.0, Severity.HIGH),  # inclusive high cutoff
         (50.0, Severity.MEDIUM),
-        (40.0, Severity.MEDIUM),    # inclusive medium floor
+        (40.0, Severity.MEDIUM),  # inclusive medium floor
         (10.0, Severity.LOW),
         (0.0, Severity.LOW),
     ],
@@ -95,9 +94,7 @@ def test_explain_names_the_process_and_calls_out_an_attack_feature():
     extractor = FeatureExtractor(window_seconds=30)
     vector = extractor.extract_vector(_attack_window())
 
-    sentence = explain(
-        vector, FeatureExtractor.FEATURE_NAMES, process_name="bash", top_k=3
-    )
+    sentence = explain(vector, FeatureExtractor.FEATURE_NAMES, process_name="bash", top_k=3)
 
     assert isinstance(sentence, str)
     # The process name must appear.
@@ -105,10 +102,7 @@ def test_explain_names_the_process_and_calls_out_an_attack_feature():
     # At least one of the high-salience attack callouts must surface. The shell
     # spawn, sensitive-file access, and Tor connection are all candidates.
     lowered = sentence.lower()
-    assert any(
-        phrase in lowered
-        for phrase in ("shell", "sensitive system files", "tor")
-    ), sentence
+    assert any(phrase in lowered for phrase in ("shell", "sensitive system files", "tor")), sentence
 
 
 def test_explain_falls_back_for_a_benign_all_zero_vector():

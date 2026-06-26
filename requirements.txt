@@ -1,5 +1,8 @@
 # eBPF
-bcc>=0.26.0
+# NOTE: BCC's Python bindings are provided by the SYSTEM package
+# (python3-bpfcc / bpfcc-tools / libbpfcc-dev), not PyPI — see
+# scripts/install_deps.sh and the Dockerfile. The collector imports `bcc`
+# lazily, so the package installs and the non-eBPF layers run without it.
 
 # ML
 torch>=2.0.0

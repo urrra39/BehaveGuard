@@ -16,14 +16,14 @@ from behaveguard.collector.event_types import DnsTunnelEvent, NetworkEvent
 # Saturating caps (value that maps to 1.0).
 CAP_UNIQUE_IPS = 50.0
 CAP_UNIQUE_PORTS = 50.0
-CAP_CONN_RATE = 20.0          # outbound connections / second
+CAP_CONN_RATE = 20.0  # outbound connections / second
 CAP_BYTES_RATE = 1_000_000.0  # bytes / second
 
 # DNS-tunnel caps. A normal DNS query is well under 100 bytes; the eBPF layer
 # only forwards queries already > 100 bytes, so these caps are tuned for the
 # oversized regime that signals tunneling/exfiltration.
-CAP_DNS_SIZE = 512.0          # bytes (EDNS0 max-ish) -> 1.0
-CAP_DNS_RATE = 20.0           # suspicious DNS queries / second -> 1.0
+CAP_DNS_SIZE = 512.0  # bytes (EDNS0 max-ish) -> 1.0
+CAP_DNS_RATE = 20.0  # suspicious DNS queries / second -> 1.0
 
 # Ports commonly used by Tor (SOCKS proxy, control, ORPort, dir).
 TOR_PORTS = {9050, 9051, 9001, 9030}
@@ -111,7 +111,7 @@ class NetworkFeatureExtractor:
         dns = dns_events or []
         if dns:
             sizes = [int(e.payload_size) for e in dns]
-            avg_dns = (sum(sizes) / len(sizes))
+            avg_dns = sum(sizes) / len(sizes)
             max_dns = max(sizes)
         else:
             avg_dns = 0.0

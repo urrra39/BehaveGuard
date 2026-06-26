@@ -159,9 +159,7 @@ def run(no_dashboard: bool) -> None:
             api_base_url=f"http://localhost:{settings.api.port}", api_token=token
         )
         threading.Thread(
-            target=lambda: dash_app.run(
-                host=settings.dashboard.host, port=settings.dashboard.port
-            ),
+            target=lambda: dash_app.run(host=settings.dashboard.host, port=settings.dashboard.port),
             daemon=True,
         ).start()
 
@@ -234,8 +232,9 @@ def status() -> None:
     models = ModelStore().list_models()
     click.echo(f"Trained models: {len(models)}")
     for meta in models:
-        click.echo(f"  - {meta.get('process_name', '?')} "
-                   f"(threshold={meta.get('threshold', 0):.3f})")
+        click.echo(
+            f"  - {meta.get('process_name', '?')} " f"(threshold={meta.get('threshold', 0):.3f})"
+        )
 
     async def _counts() -> int:
         return await AlertStore(settings).count_unacknowledged()
@@ -255,9 +254,7 @@ def alerts(last: str, severity: Optional[str]) -> None:
     since = datetime.now() - _parse_duration(last)
 
     async def _list():
-        return await AlertStore(settings).list_alerts(
-            severity=severity, from_time=since, limit=200
-        )
+        return await AlertStore(settings).list_alerts(severity=severity, from_time=since, limit=200)
 
     rows = asyncio.run(_list())
     if not rows:
@@ -288,8 +285,10 @@ def explain(pid: int) -> None:
 
     scorer = AnomalyScorer(settings, ModelStore())
     verdict = scorer.score(events[-1].comm, events, pid)
-    click.echo(f"PID {pid} ({events[-1].comm}) — score {verdict.final_score:.0f}/100 "
-               f"[{verdict.severity}]")
+    click.echo(
+        f"PID {pid} ({events[-1].comm}) — score {verdict.final_score:.0f}/100 "
+        f"[{verdict.severity}]"
+    )
     click.echo(verdict.explanation)
 
 
@@ -330,9 +329,14 @@ def whitelist_add(pid: Optional[int], process: Optional[str]) -> None:
 
         engine = RulesEngine()
         engine.load()
-        engine.add_rule(SuppressionRule(
-            process_name=process, reason="cli whitelist", max_score_suppress=100.0,
-            created_by="cli"))
+        engine.add_rule(
+            SuppressionRule(
+                process_name=process,
+                reason="cli whitelist",
+                max_score_suppress=100.0,
+                created_by="cli",
+            )
+        )
         engine.save()
         click.echo(f"  [ok] process {process!r} whitelisted (suppression rule saved)")
 

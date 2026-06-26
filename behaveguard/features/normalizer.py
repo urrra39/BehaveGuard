@@ -39,8 +39,11 @@ class FeatureNormalizer:
         self.std_: Any = None
         self.fitted: bool = False
 
-    def fit(self, X: "np.ndarray") -> "FeatureNormalizer":
-        """Learn per-feature statistics from a ``(n_samples, n_features)`` matrix."""
+    def fit(self, X: "np.ndarray") -> "FeatureNormalizer":  # noqa: N803
+        """Learn per-feature statistics from ``X``, a ``(n_samples, n_features)`` matrix.
+
+        ``X`` keeps its conventional ML capitalization (hence the N803 waiver).
+        """
         import numpy as np
 
         arr = np.asarray(X, dtype=np.float64)

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Python-side event model mirroring the C structs emitted by BehaveGuard eBPF programs.
 
 This module is the single source of truth for the wire format shared between the
@@ -34,12 +32,14 @@ The syscall table is the authoritative Linux **x86_64** ABI mapping (numbers
 exposed via :data:`SYSCALL_NAMES` and the :func:`syscall_name` lookup helper.
 """
 
+from __future__ import annotations
+
 import ctypes
 import socket
 import struct
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import IntEnum
-from typing import List, Union
+from typing import Any, List, Union
 
 __all__ = [
     "TASK_COMM_LEN",
@@ -139,9 +139,9 @@ class ProcessAction(IntEnum):
 class InjectionMethod(IntEnum):
     """Process-injection techniques carried in :class:`InjectionEventRaw.method`."""
 
-    PTRACE = 0              # ptrace(PTRACE_ATTACH/POKETEXT...) via security_ptrace
-    PROC_MEM = 1            # write to /proc/<pid>/mem
-    PROCESS_VM_WRITEV = 2   # process_vm_writev() cross-process memory write
+    PTRACE = 0  # ptrace(PTRACE_ATTACH/POKETEXT...) via security_ptrace
+    PROC_MEM = 1  # write to /proc/<pid>/mem
+    PROCESS_VM_WRITEV = 2  # process_vm_writev() cross-process memory write
 
 
 class ContainerAction(IntEnum):
@@ -155,9 +155,9 @@ class ContainerAction(IntEnum):
 class AntiforensicAction(IntEnum):
     """Anti-forensic actions carried in :class:`AntiforensicEventRaw.action`."""
 
-    UNLINK = 0       # deletion of a log file
-    TIMESTOMP = 1    # timestamp tampering (utimensat/utimes)
-    TRUNCATE = 2     # truncation/clearing of a log file
+    UNLINK = 0  # deletion of a log file
+    TIMESTOMP = 1  # timestamp tampering (utimensat/utimes)
+    TRUNCATE = 2  # truncation/clearing of a log file
 
 
 # ---------------------------------------------------------------------------
@@ -390,7 +390,7 @@ class DnsTunnelEventRaw(ctypes.Structure):
 # ---------------------------------------------------------------------------
 
 
-def _decode_cstr(raw_bytes: object) -> str:
+def _decode_cstr(raw_bytes: Any) -> str:
     """Decode a NUL-terminated C string field into a clean Python ``str``.
 
     Accepts either a ``bytes`` object or a ``ctypes`` character array (anything

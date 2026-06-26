@@ -82,9 +82,9 @@ def test_extract_vector_all_values_in_unit_interval(extractor):
     vector = extractor.extract_vector(_attack_window())
     for i, value in enumerate(vector):
         assert isinstance(value, float)
-        assert 0.0 <= value <= 1.0, (
-            f"feature {FeatureExtractor.FEATURE_NAMES[i]} out of [0,1]: {value}"
-        )
+        assert (
+            0.0 <= value <= 1.0
+        ), f"feature {FeatureExtractor.FEATURE_NAMES[i]} out of [0,1]: {value}"
 
 
 def test_extract_vector_is_deterministic_on_repeat(extractor):
@@ -117,23 +117,50 @@ def _advanced_layers_window(base_ns: int = 7_000_000_000_000):
     """One event from each of the five advanced eBPF defense layers."""
     return [
         # 1. Process injection (process_vm_writev into a victim).
-        InjectionEvent(timestamp_ns=base_ns + 1, pid=900, uid=0, comm="evil",
-                       target_pid=42, method="process_vm_writev"),
+        InjectionEvent(
+            timestamp_ns=base_ns + 1,
+            pid=900,
+            uid=0,
+            comm="evil",
+            target_pid=42,
+            method="process_vm_writev",
+        ),
         # 2. Container escape (namespace change + pivot_root).
-        ContainerEscapeEvent(timestamp_ns=base_ns + 2, pid=900, uid=0, comm="evil",
-                             action="setns", flags=0),
-        ContainerEscapeEvent(timestamp_ns=base_ns + 3, pid=900, uid=0, comm="evil",
-                             action="pivot_root", flags=0),
+        ContainerEscapeEvent(
+            timestamp_ns=base_ns + 2, pid=900, uid=0, comm="evil", action="setns", flags=0
+        ),
+        ContainerEscapeEvent(
+            timestamp_ns=base_ns + 3, pid=900, uid=0, comm="evil", action="pivot_root", flags=0
+        ),
         # 3. LOLBin execution (nc on the watchlist).
         LolbinEvent(timestamp_ns=base_ns + 4, pid=900, ppid=1, uid=0, comm="nc"),
         # 4. Anti-forensic (log unlink + timestomp under /var/log).
-        AntiforensicEvent(timestamp_ns=base_ns + 5, pid=900, uid=0, comm="evil",
-                          action="unlink", path="/var/log/auth.log"),
-        AntiforensicEvent(timestamp_ns=base_ns + 6, pid=900, uid=0, comm="evil",
-                          action="timestomp", path="/var/log/wtmp"),
+        AntiforensicEvent(
+            timestamp_ns=base_ns + 5,
+            pid=900,
+            uid=0,
+            comm="evil",
+            action="unlink",
+            path="/var/log/auth.log",
+        ),
+        AntiforensicEvent(
+            timestamp_ns=base_ns + 6,
+            pid=900,
+            uid=0,
+            comm="evil",
+            action="timestomp",
+            path="/var/log/wtmp",
+        ),
         # 5. DNS tunneling (oversized UDP/53 query).
-        DnsTunnelEvent(timestamp_ns=base_ns + 7, pid=900, uid=0, comm="evil",
-                       dst_ip="198.51.100.53", dst_port=53, payload_size=400),
+        DnsTunnelEvent(
+            timestamp_ns=base_ns + 7,
+            pid=900,
+            uid=0,
+            comm="evil",
+            dst_ip="198.51.100.53",
+            dst_port=53,
+            payload_size=400,
+        ),
     ]
 
 

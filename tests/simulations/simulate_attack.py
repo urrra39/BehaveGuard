@@ -324,12 +324,30 @@ class AttackSimulator:
         """
         base = self.base_ns
         return [
-            InjectionEvent(timestamp_ns=base + 1_000, pid=self.pid, uid=0,
-                           comm=self.comm, target_pid=1234, method="ptrace"),
-            InjectionEvent(timestamp_ns=base + 2_000, pid=self.pid, uid=0,
-                           comm=self.comm, target_pid=1234, method="proc_mem"),
-            InjectionEvent(timestamp_ns=base + 3_000, pid=self.pid, uid=0,
-                           comm=self.comm, target_pid=1234, method="process_vm_writev"),
+            InjectionEvent(
+                timestamp_ns=base + 1_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                target_pid=1234,
+                method="ptrace",
+            ),
+            InjectionEvent(
+                timestamp_ns=base + 2_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                target_pid=1234,
+                method="proc_mem",
+            ),
+            InjectionEvent(
+                timestamp_ns=base + 3_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                target_pid=1234,
+                method="process_vm_writev",
+            ),
         ]
 
     def container_escape(self) -> List[RawEvent]:
@@ -342,12 +360,30 @@ class AttackSimulator:
         """
         base = self.base_ns
         return [
-            ContainerEscapeEvent(timestamp_ns=base + 1_000, pid=self.pid, uid=0,
-                                 comm=self.comm, action="setns", flags=0x08000000),
-            ContainerEscapeEvent(timestamp_ns=base + 2_000, pid=self.pid, uid=0,
-                                 comm=self.comm, action="unshare", flags=0x10000000),
-            ContainerEscapeEvent(timestamp_ns=base + 3_000, pid=self.pid, uid=0,
-                                 comm=self.comm, action="pivot_root", flags=0),
+            ContainerEscapeEvent(
+                timestamp_ns=base + 1_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                action="setns",
+                flags=0x08000000,
+            ),
+            ContainerEscapeEvent(
+                timestamp_ns=base + 2_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                action="unshare",
+                flags=0x10000000,
+            ),
+            ContainerEscapeEvent(
+                timestamp_ns=base + 3_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                action="pivot_root",
+                flags=0,
+            ),
         ]
 
     def lolbin_execution(self) -> List[RawEvent]:
@@ -360,8 +396,9 @@ class AttackSimulator:
         """
         base = self.base_ns
         return [
-            LolbinEvent(timestamp_ns=base + (i * 1_000), pid=self.pid, ppid=1234,
-                        uid=1000, comm=binary)
+            LolbinEvent(
+                timestamp_ns=base + (i * 1_000), pid=self.pid, ppid=1234, uid=1000, comm=binary
+            )
             for i, binary in enumerate(["wget", "nc", "base64", "chmod"])
         ]
 
@@ -375,12 +412,30 @@ class AttackSimulator:
         """
         base = self.base_ns
         return [
-            AntiforensicEvent(timestamp_ns=base + 1_000, pid=self.pid, uid=0,
-                              comm=self.comm, action="unlink", path="/var/log/auth.log"),
-            AntiforensicEvent(timestamp_ns=base + 2_000, pid=self.pid, uid=0,
-                              comm=self.comm, action="truncate", path="/var/log/syslog"),
-            AntiforensicEvent(timestamp_ns=base + 3_000, pid=self.pid, uid=0,
-                              comm=self.comm, action="timestomp", path="/var/log/wtmp"),
+            AntiforensicEvent(
+                timestamp_ns=base + 1_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                action="unlink",
+                path="/var/log/auth.log",
+            ),
+            AntiforensicEvent(
+                timestamp_ns=base + 2_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                action="truncate",
+                path="/var/log/syslog",
+            ),
+            AntiforensicEvent(
+                timestamp_ns=base + 3_000,
+                pid=self.pid,
+                uid=0,
+                comm=self.comm,
+                action="timestomp",
+                path="/var/log/wtmp",
+            ),
         ]
 
     def dns_tunneling(self) -> List[RawEvent]:
@@ -394,9 +449,15 @@ class AttackSimulator:
         base = self.base_ns
         payloads = [220, 300, 380, 420, 480]
         return [
-            DnsTunnelEvent(timestamp_ns=base + (i * 1_000), pid=self.pid, uid=1000,
-                           comm="exfil", dst_ip="198.51.100.53", dst_port=53,
-                           payload_size=size)
+            DnsTunnelEvent(
+                timestamp_ns=base + (i * 1_000),
+                pid=self.pid,
+                uid=1000,
+                comm="exfil",
+                dst_ip="198.51.100.53",
+                dst_port=53,
+                payload_size=size,
+            )
             for i, size in enumerate(payloads)
         ]
 

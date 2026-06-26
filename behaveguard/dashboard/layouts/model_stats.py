@@ -13,22 +13,42 @@ def layout() -> Any:
     return dbc.Container(
         [
             dbc.Row(
-                dbc.Col(dbc.Card(dbc.CardBody([
-                    html.H5("Trained model baselines"),
-                    html.Div(id="model-table"),
-                ]))),
+                dbc.Col(
+                    dbc.Card(
+                        dbc.CardBody(
+                            [
+                                html.H5("Trained model baselines"),
+                                html.Div(id="model-table"),
+                            ]
+                        )
+                    )
+                ),
                 className="my-3",
             ),
             dbc.Row(
                 [
-                    dbc.Col(dbc.Card(dbc.CardBody([
-                        html.H5("Per-model anomaly threshold"),
-                        dcc.Graph(id="model-threshold-chart"),
-                    ])), width=6),
-                    dbc.Col(dbc.Card(dbc.CardBody([
-                        html.H5("Training jobs"),
-                        html.Div(id="training-jobs-table"),
-                    ])), width=6),
+                    dbc.Col(
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Per-model anomaly threshold"),
+                                    dcc.Graph(id="model-threshold-chart"),
+                                ]
+                            )
+                        ),
+                        width=6,
+                    ),
+                    dbc.Col(
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Training jobs"),
+                                    html.Div(id="training-jobs-table"),
+                                ]
+                            )
+                        ),
+                        width=6,
+                    ),
                 ]
             ),
         ],

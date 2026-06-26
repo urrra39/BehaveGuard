@@ -20,9 +20,9 @@ import secrets
 import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Deque, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Deque, Dict, Optional
 
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import JSONResponse
 
 from behaveguard import __version__
@@ -57,8 +57,8 @@ class AppState:
         self.model_registry = ModelRegistry()
 
         # Suppression rules + alert manager (no torch needed).
-        from behaveguard.alerts.channels import build_channels
         from behaveguard.alerts.alert_manager import AlertManager
+        from behaveguard.alerts.channels import build_channels
         from behaveguard.alerts.rules_engine import RulesEngine
 
         self.rules_engine = RulesEngine()

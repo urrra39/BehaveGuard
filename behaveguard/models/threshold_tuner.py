@@ -187,7 +187,6 @@ class ThresholdTuner:
 
         true_positives = sum(1 for e in attacks if e >= thr)
         false_positives = sum(1 for e in normals if e >= thr)
-        false_negatives = n_pos - true_positives
 
         tpr = (true_positives / n_pos) if n_pos > 0 else 0.0
         fpr = (false_positives / n_neg) if n_neg > 0 else 0.0
