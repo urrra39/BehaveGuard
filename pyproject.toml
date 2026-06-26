@@ -29,9 +29,11 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
-    "black>=23.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
+    # Pinned: these gate CI; pinning keeps local and CI byte-for-byte identical
+    # (a newer black on the runner reformats files a local black calls clean).
+    "black==25.11.0",
+    "ruff==0.15.20",
+    "mypy==1.19.1",
 ]
 
 [project.scripts]
@@ -79,20 +81,25 @@ warn_unused_ignores = false
 # Heavy C-extension / unstubbed libraries are lazy-imported and are not part of
 # our type surface; don't follow into their stubs (avoids third-party noise and
 # stub-parsing crashes).
+# Both the bare module and its submodules are listed: a `foo.*` pattern does NOT
+# match the top-level `import foo`, and on CI these libs are installed (so mypy
+# would otherwise follow into their stubs).
 module = [
-    "numpy.*",
-    "torch.*",
-    "dash.*",
-    "dash_bootstrap_components.*",
-    "plotly.*",
-    "aiohttp.*",
-    "influxdb_client.*",
-    "sklearn.*",
-    "shap.*",
-    "psutil.*",
-    "bcc.*",
-    "uvicorn.*",
-    "yaml.*",
+    "numpy", "numpy.*",
+    "torch", "torch.*",
+    "dash", "dash.*",
+    "dash_bootstrap_components", "dash_bootstrap_components.*",
+    "plotly", "plotly.*",
+    "aiohttp", "aiohttp.*",
+    "influxdb_client", "influxdb_client.*",
+    "sklearn", "sklearn.*",
+    "shap", "shap.*",
+    "psutil", "psutil.*",
+    "bcc", "bcc.*",
+    "uvicorn", "uvicorn.*",
+    "yaml", "yaml.*",
+    "sqlalchemy", "sqlalchemy.*",
+    "aiosmtplib", "aiosmtplib.*",
 ]
 follow_imports = "skip"
 ignore_missing_imports = true
