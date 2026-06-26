@@ -1,0 +1,27 @@
+# Enforce LF line endings for all text files so formatters/linters behave
+# identically between Windows development checkouts and the Linux CI runners
+# (black/ruff are line-ending sensitive). Without this, a CRLF working tree can
+# pass `black --check` locally yet fail in CI.
+* text=auto eol=lf
+
+*.py    text eol=lf
+*.c     text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+Dockerfile  text eol=lf
+Makefile    text eol=lf
+.gitignore  text eol=lf
+
+# Binary assets (none today, but make the intent explicit).
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pt    binary
+*.pth   binary

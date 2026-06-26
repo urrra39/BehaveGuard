@@ -39,8 +39,11 @@ click>=8.1.0
 aiosmtplib>=3.0.0
 
 # Dev
+# black/ruff are PINNED: they gate CI and their output changes between releases,
+# so an unpinned range makes CI nondeterministic vs local (a newer black on the
+# runner reformatted files a local black considered clean). Pin = reproducible.
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
 pytest-cov>=4.1.0
-black>=23.0.0
-ruff>=0.1.0
+black==25.11.0
+ruff==0.15.20
