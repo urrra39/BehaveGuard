@@ -63,9 +63,7 @@ async def train(request: Request, body: TrainRequest) -> TrainJobResponse:
         "finished_unix": None,
     }
     # Fire-and-forget; status is polled via /models/status.
-    asyncio.create_task(
-        _run_training(state, job_id, body.process_name, body.observation_minutes)
-    )
+    asyncio.create_task(_run_training(state, job_id, body.process_name, body.observation_minutes))
     return TrainJobResponse(job_id=job_id, process_name=body.process_name, state="queued")
 
 
@@ -80,7 +78,6 @@ async def train_status(request: Request) -> TrainStatusListResponse:
 @router.get("/list", response_model=ModelListResponse)
 async def list_models(request: Request) -> ModelListResponse:
     """List the trained model bundles known to the model store."""
-    state: "AppState" = request.app.state.bg
     from behaveguard.models.model_store import ModelStore
 
     store = ModelStore()

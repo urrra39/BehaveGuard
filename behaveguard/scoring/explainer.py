@@ -42,7 +42,9 @@ _PHRASES = {
     "events_per_second": "generated events at an unusually high rate",
     "cpu_time_ratio": "ran with an unusually high activity duty cycle",
     # --- advanced defense layers (explicit, decisive callouts) ---
-    "is_injection_target": "is a Process Injection Target (a foreign process is writing its memory)",
+    "is_injection_target": (
+        "is a Process Injection Target (a foreign process is writing its memory)"
+    ),
     "namespace_change_count": "changed namespaces — possible Container Escape preparation",
     "pivot_root_attempt": "made a Container Escape Attempt (pivot_root)",
     "lolbin_execution_count": "executed Living-Off-The-Land binaries (LOLBins)",
@@ -82,7 +84,7 @@ def _syscall_index(name: str, prefix: str) -> Optional[int]:
     """Return the integer index from ``<prefix><i><suffix>`` names, else None."""
     if not name.startswith(prefix):
         return None
-    rest = name[len(prefix):]
+    rest = name[len(prefix) :]
     digits = rest.split("_", 1)[0]
     return int(digits) if digits.isdigit() else None
 
@@ -108,7 +110,7 @@ def _phrase_for(name: str) -> str:
     if name in _PHRASES:
         return _PHRASES[name]
     if name.startswith("lolbin_"):  # one-hot LOLBin flag for a specific binary
-        binary = name[len("lolbin_"):]
+        binary = name[len("lolbin_") :]
         return f"executed the LOLBin '{binary}'"
     sys_idx = _syscall_index(name, "syscall_")
     if sys_idx is not None and name.endswith("_freq"):

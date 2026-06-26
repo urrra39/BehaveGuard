@@ -80,9 +80,7 @@ def test_attack_signature_fires(extractor, sim, attack_name):
     assert len(vector) == FeatureExtractor.NUM_FEATURES
     for feature_name, predicate in ATTACK_SIGNATURES[attack_name]:
         value = _feat(vector, feature_name)
-        assert predicate(value), (
-            f"{attack_name}: expected {feature_name} elevated, got {value}"
-        )
+        assert predicate(value), f"{attack_name}: expected {feature_name} elevated, got {value}"
 
 
 def test_credential_dumping_files_in_system_dirs(extractor, sim):
@@ -124,9 +122,7 @@ def test_advanced_layer_signature_fires(extractor, sim, layer_name):
     assert len(vector) == FeatureExtractor.NUM_FEATURES
     for feature_name, predicate in ADVANCED_LAYER_SIGNATURES[layer_name]:
         value = _feat(vector, feature_name)
-        assert predicate(value), (
-            f"{layer_name}: expected {feature_name} elevated, got {value}"
-        )
+        assert predicate(value), f"{layer_name}: expected {feature_name} elevated, got {value}"
 
 
 def test_layer_process_injection(extractor, sim):

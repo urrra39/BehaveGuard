@@ -128,9 +128,7 @@ class ModelStore:
         metadata_path = target_dir / self.METADATA_FILE
         if not target_dir.is_dir() or not metadata_path.is_file():
             raise ModelNotFoundError(
-                "no model bundle for process {0!r} under {1}".format(
-                    process_name, self.base_dir
-                )
+                "no model bundle for process {0!r} under {1}".format(process_name, self.base_dir)
             )
 
         with metadata_path.open("r", encoding="utf-8") as handle:

@@ -9,7 +9,7 @@ settings object.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, List, Protocol, runtime_checkable
 
 from behaveguard.alerts.alert_types import Alert, DeliveryResult
 from behaveguard.alerts.channels.email_notifier import EmailChannel
@@ -26,8 +26,7 @@ class AlertChannel(Protocol):
 
     name: str
 
-    async def send(self, alert: Alert) -> DeliveryResult:
-        ...
+    async def send(self, alert: Alert) -> DeliveryResult: ...
 
 
 def build_channels(config: "Settings") -> List[AlertChannel]:

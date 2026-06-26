@@ -24,26 +24,54 @@ def layout() -> Any:
             ),
             dbc.Row(
                 [
-                    dbc.Col(dbc.Card(dbc.CardBody([
-                        html.H5("Syscall frequency"),
-                        dcc.Graph(id="proc-syscall-freq"),
-                    ])), width=6),
-                    dbc.Col(dbc.Card(dbc.CardBody([
-                        html.H5("Anomaly score history"),
-                        dcc.Graph(id="proc-score-history"),
-                    ])), width=6),
+                    dbc.Col(
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Syscall frequency"),
+                                    dcc.Graph(id="proc-syscall-freq"),
+                                ]
+                            )
+                        ),
+                        width=6,
+                    ),
+                    dbc.Col(
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Anomaly score history"),
+                                    dcc.Graph(id="proc-score-history"),
+                                ]
+                            )
+                        ),
+                        width=6,
+                    ),
                 ]
             ),
             dbc.Row(
                 [
-                    dbc.Col(dbc.Card(dbc.CardBody([
-                        html.H5("Event type breakdown"),
-                        dcc.Graph(id="proc-event-breakdown"),
-                    ])), width=6),
-                    dbc.Col(dbc.Card(dbc.CardBody([
-                        html.H5("Recent file accesses"),
-                        html.Div(id="proc-file-table"),
-                    ])), width=6),
+                    dbc.Col(
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Event type breakdown"),
+                                    dcc.Graph(id="proc-event-breakdown"),
+                                ]
+                            )
+                        ),
+                        width=6,
+                    ),
+                    dbc.Col(
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Recent file accesses"),
+                                    html.Div(id="proc-file-table"),
+                                ]
+                            )
+                        ),
+                        width=6,
+                    ),
                 ]
             ),
         ],

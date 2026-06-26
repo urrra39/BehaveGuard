@@ -20,8 +20,15 @@ SEVERITY_COLORS = {
 SEVERITY_RANK = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
 
 EVENT_TYPE_NAMES = {
-    1: "syscall", 2: "network", 3: "file", 4: "process",
-    5: "injection", 6: "container", 7: "lolbin", 8: "antiforensic", 9: "dns_tunnel",
+    1: "syscall",
+    2: "network",
+    3: "file",
+    4: "process",
+    5: "injection",
+    6: "container",
+    7: "lolbin",
+    8: "antiforensic",
+    9: "dns_tunnel",
 }
 
 
@@ -60,25 +67,33 @@ def register_callbacks(app: Any, client: Any) -> None:
             labels = [f"{p.get('comm', '?')}:{p.get('pid', 0)}" for p in processes]
             scores = [float(p.get("latest_score", 0.0)) for p in processes]
             heatmap = go.Figure(
-                go.Heatmap(z=[scores], x=labels, y=["score"], zmin=0, zmax=100,
-                           colorscale="Inferno")
+                go.Heatmap(
+                    z=[scores], x=labels, y=["score"], zmin=0, zmax=100, colorscale="Inferno"
+                )
             )
-            heatmap.update_layout(template="plotly_dark",
-                                  margin={"l": 40, "r": 20, "t": 30, "b": 80})
+            heatmap.update_layout(
+                template="plotly_dark", margin={"l": 40, "r": 20, "t": 30, "b": 80}
+            )
 
-            ranked = sorted(processes, key=lambda p: float(p.get("latest_score", 0.0)),
-                            reverse=True)[:10]
+            ranked = sorted(
+                processes, key=lambda p: float(p.get("latest_score", 0.0)), reverse=True
+            )[:10]
             top = go.Figure(
                 go.Bar(
                     x=[float(p.get("latest_score", 0.0)) for p in ranked][::-1],
                     y=[f"{p.get('comm', '?')}:{p.get('pid', 0)}" for p in ranked][::-1],
                     orientation="h",
-                    marker_color=[SEVERITY_COLORS.get(p.get("latest_severity", "LOW"), "#5e72e4")
-                                  for p in ranked][::-1],
+                    marker_color=[
+                        SEVERITY_COLORS.get(p.get("latest_severity", "LOW"), "#5e72e4")
+                        for p in ranked
+                    ][::-1],
                 )
             )
-            top.update_layout(template="plotly_dark", xaxis_title="anomaly score",
-                              margin={"l": 120, "r": 20, "t": 30, "b": 40})
+            top.update_layout(
+                template="plotly_dark",
+                xaxis_title="anomaly score",
+                margin={"l": 120, "r": 20, "t": 30, "b": 40},
+            )
         else:
             heatmap = _empty_figure("no monitored processes")
             top = _empty_figure("no monitored processes")
@@ -136,33 +151,47 @@ def register_callbacks(app: Any, client: Any) -> None:
                 name = detail_fields.get("syscall_name", "unknown")
                 syscall_counts[name] = syscall_counts.get(name, 0) + 1
             elif etype == "file":
-                file_rows.append((detail_fields.get("operation", "?"),
-                                  detail_fields.get("path", "")))
+                file_rows.append(
+                    (detail_fields.get("operation", "?"), detail_fields.get("path", ""))
+                )
 
         if syscall_counts:
             top_sys = sorted(syscall_counts.items(), key=lambda kv: kv[1], reverse=True)[:15]
-            syscall_fig = go.Figure(go.Bar(x=[c for _, c in top_sys],
-                                           y=[n for n, _ in top_sys], orientation="h"))
-            syscall_fig.update_layout(template="plotly_dark",
-                                      margin={"l": 100, "r": 20, "t": 20, "b": 40})
+            syscall_fig = go.Figure(
+                go.Bar(x=[c for _, c in top_sys], y=[n for n, _ in top_sys], orientation="h")
+            )
+            syscall_fig.update_layout(
+                template="plotly_dark", margin={"l": 100, "r": 20, "t": 20, "b": 40}
+            )
         else:
             syscall_fig = _empty_figure("no syscalls")
 
         history = detail.get("score_history", [])
         if history:
-            score_fig = go.Figure(go.Scatter(
-                x=[h["timestamp_ns"] for h in history],
-                y=[h["score"] for h in history], mode="lines+markers"))
-            score_fig.update_layout(template="plotly_dark", yaxis_range=[0, 100],
-                                    margin={"l": 40, "r": 20, "t": 20, "b": 40})
+            score_fig = go.Figure(
+                go.Scatter(
+                    x=[h["timestamp_ns"] for h in history],
+                    y=[h["score"] for h in history],
+                    mode="lines+markers",
+                )
+            )
+            score_fig.update_layout(
+                template="plotly_dark",
+                yaxis_range=[0, 100],
+                margin={"l": 40, "r": 20, "t": 20, "b": 40},
+            )
         else:
             score_fig = _empty_figure("no score history")
 
         if event_counts:
-            breakdown = go.Figure(go.Pie(labels=list(event_counts.keys()),
-                                         values=list(event_counts.values()), hole=0.4))
-            breakdown.update_layout(template="plotly_dark",
-                                    margin={"l": 20, "r": 20, "t": 20, "b": 20})
+            breakdown = go.Figure(
+                go.Pie(
+                    labels=list(event_counts.keys()), values=list(event_counts.values()), hole=0.4
+                )
+            )
+            breakdown.update_layout(
+                template="plotly_dark", margin={"l": 20, "r": 20, "t": 20, "b": 20}
+            )
         else:
             breakdown = _empty_figure("no events")
 
@@ -194,15 +223,21 @@ def register_callbacks(app: Any, client: Any) -> None:
             cards.append(
                 html.Div(
                     [
-                        html.Strong(f"[{sev}] {alert.get('process_name', '?')} "
-                                    f"(pid {alert.get('pid', 0)}) — score "
-                                    f"{alert.get('score', 0):.0f}/100"),
+                        html.Strong(
+                            f"[{sev}] {alert.get('process_name', '?')} "
+                            f"(pid {alert.get('pid', 0)}) — score "
+                            f"{alert.get('score', 0):.0f}/100"
+                        ),
                         html.Div(alert.get("explanation", ""), style={"fontSize": "0.9em"}),
-                        html.Small("acknowledged" if alert.get("acknowledged") else "unacknowledged"),
+                        html.Small(
+                            "acknowledged" if alert.get("acknowledged") else "unacknowledged"
+                        ),
                     ],
                     style={
                         "borderLeft": f"5px solid {SEVERITY_COLORS.get(sev, '#5e72e4')}",
-                        "padding": "8px", "margin": "6px 0", "background": "#1f2233",
+                        "padding": "8px",
+                        "margin": "6px 0",
+                        "background": "#1f2233",
                     },
                 )
             )
@@ -225,21 +260,26 @@ def register_callbacks(app: Any, client: Any) -> None:
             model_table = html.Table(
                 [html.Tr([html.Th("process"), html.Th("threshold"), html.Th("windows")])]
                 + [
-                    html.Tr([
-                        html.Td(m.get("process_name", "?")),
-                        html.Td(f"{m.get('metadata', {}).get('threshold', 0):.3f}"),
-                        html.Td(str(m.get("metadata", {}).get("num_windows", 0))),
-                    ])
+                    html.Tr(
+                        [
+                            html.Td(m.get("process_name", "?")),
+                            html.Td(f"{m.get('metadata', {}).get('threshold', 0):.3f}"),
+                            html.Td(str(m.get("metadata", {}).get("num_windows", 0))),
+                        ]
+                    )
                     for m in models
                 ],
                 style={"width": "100%"},
             )
-            thr_fig = go.Figure(go.Bar(
-                x=[m.get("process_name", "?") for m in models],
-                y=[float(m.get("metadata", {}).get("threshold", 0.0)) for m in models],
-            ))
-            thr_fig.update_layout(template="plotly_dark",
-                                  margin={"l": 40, "r": 20, "t": 20, "b": 60})
+            thr_fig = go.Figure(
+                go.Bar(
+                    x=[m.get("process_name", "?") for m in models],
+                    y=[float(m.get("metadata", {}).get("threshold", 0.0)) for m in models],
+                )
+            )
+            thr_fig.update_layout(
+                template="plotly_dark", margin={"l": 40, "r": 20, "t": 20, "b": 60}
+            )
         else:
             model_table = html.Div("no trained models")
             thr_fig = _empty_figure("no trained models")
@@ -248,9 +288,13 @@ def register_callbacks(app: Any, client: Any) -> None:
             jobs_table = html.Table(
                 [html.Tr([html.Th("job"), html.Th("process"), html.Th("state")])]
                 + [
-                    html.Tr([html.Td(j.get("job_id", "")[:8]),
-                             html.Td(j.get("process_name", "?")),
-                             html.Td(j.get("state", "?"))])
+                    html.Tr(
+                        [
+                            html.Td(j.get("job_id", "")[:8]),
+                            html.Td(j.get("process_name", "?")),
+                            html.Td(j.get("state", "?")),
+                        ]
+                    )
                     for j in jobs
                 ],
                 style={"width": "100%"},

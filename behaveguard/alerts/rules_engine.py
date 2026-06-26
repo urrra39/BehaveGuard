@@ -71,9 +71,7 @@ class RulesEngine:
     # ------------------------------------------------------------------ #
     # Evaluation
     # ------------------------------------------------------------------ #
-    def should_suppress(
-        self, process_name: str, score: float, pid: Optional[int] = None
-    ) -> bool:
+    def should_suppress(self, process_name: str, score: float, pid: Optional[int] = None) -> bool:
         """Return whether an alert for ``process_name`` at ``score`` is suppressed.
 
         Suppressed when an active rule exists for the process and the score is

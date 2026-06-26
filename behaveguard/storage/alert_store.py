@@ -116,7 +116,7 @@ class AlertStore:
                 ),
             )
             conn.commit()
-            return int(cursor.lastrowid)
+            return int(cursor.lastrowid or 0)
         finally:
             conn.close()
 

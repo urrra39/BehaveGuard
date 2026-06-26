@@ -24,9 +24,7 @@ def test_lstm_forward_shapes():
     """LSTM forward returns (recon (B,S,D), hidden (B,hidden_dim))."""
     batch, seq = 2, 5
     hidden_dim = 32
-    model = LSTMDetector(
-        input_dim=D, hidden_dim=hidden_dim, num_layers=2, sequence_length=seq
-    )
+    model = LSTMDetector(input_dim=D, hidden_dim=hidden_dim, num_layers=2, sequence_length=seq)
     model.eval()
     x = torch.rand(batch, seq, D)
 

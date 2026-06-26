@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Deque, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Deque, Dict, List, Optional, Tuple
 
 from behaveguard.collector.event_types import RawEvent
 from behaveguard.features.extractor import FeatureExtractor
@@ -42,7 +42,7 @@ class AnomalyScore:
     timestamp_ns: int
     model_available: bool
     suppressed: bool = False
-    top_features: List[Dict[str, float]] = field(default_factory=list)
+    top_features: List[Dict[str, Any]] = field(default_factory=list)
 
 
 class AnomalyScorer:
@@ -61,7 +61,7 @@ class AnomalyScorer:
         # PIDs the operator has marked safe (scores suppressed to 0).
         self._safe_pids: set[int] = set()
         # Cache of loaded bundles: process_name -> (ensemble, normalizer, metadata).
-        self._bundles: Dict[str, Optional[Tuple[EnsembleDetector, object, dict]]] = {}
+        self._bundles: Dict[str, Optional[Tuple[EnsembleDetector, Any, dict]]] = {}
 
     # ------------------------------------------------------------------ #
     # Context controls
@@ -81,9 +81,7 @@ class AnomalyScorer:
     # ------------------------------------------------------------------ #
     # Bundle loading
     # ------------------------------------------------------------------ #
-    def _load_bundle(
-        self, process_name: str
-    ) -> Optional[Tuple[EnsembleDetector, object, dict]]:
+    def _load_bundle(self, process_name: str) -> Optional[Tuple[EnsembleDetector, Any, dict]]:
         """Load (and cache) the ensemble/normalizer/metadata for a process."""
         if process_name in self._bundles:
             return self._bundles[process_name]

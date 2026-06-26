@@ -68,9 +68,9 @@ class EnsembleDetector:
         Raises:
             AssertionError: If both ``lstm`` and ``vae`` are ``None``.
         """
-        assert lstm is not None or vae is not None, (
-            "EnsembleDetector requires at least one of lstm/vae to be non-None"
-        )
+        assert (
+            lstm is not None or vae is not None
+        ), "EnsembleDetector requires at least one of lstm/vae to be non-None"
         self.lstm = lstm
         self.vae = vae
 

@@ -316,17 +316,17 @@ class BaselineBuilder:
             windows_tensor, epochs, early_stopping_patience, batch_size, lr
         )
         if vae_val_errors:
-            vae.set_baseline(self.tuner._mean(vae_val_errors), self.tuner._std(
-                vae_val_errors, self.tuner._mean(vae_val_errors)))
+            vae.set_baseline(
+                self.tuner._mean(vae_val_errors),
+                self.tuner._std(vae_val_errors, self.tuner._mean(vae_val_errors)),
+            )
 
         lstm: Optional[LSTMDetector] = None
         lstm_epochs = 0
         lstm_val_loss = float("inf")
         lstm_train_loss = 0.0
         if norm_sequences:
-            sequences_tensor = torch.tensor(
-                norm_sequences, dtype=torch.float32, device=self.device
-            )
+            sequences_tensor = torch.tensor(norm_sequences, dtype=torch.float32, device=self.device)
             lstm, lstm_train_loss, lstm_val_loss, lstm_epochs, lstm_val_errors = self._train_lstm(
                 sequences_tensor, epochs, early_stopping_patience, batch_size, lr
             )

@@ -26,7 +26,20 @@ _LAZY_EXPORTS = {
     "TrainingResult": "baseline_builder",
 }
 
-__all__ = list(_LAZY_EXPORTS.keys())
+# Static (not derived from _LAZY_EXPORTS) so linters see these as re-exported and
+# the TYPE_CHECKING imports below are recognized as used.
+__all__ = [
+    "BaseDetector",
+    "LSTMDetector",
+    "BehaviorAutoencoder",
+    "EnsembleDetector",
+    "EnsembleScore",
+    "ThresholdTuner",
+    "ModelStore",
+    "ModelNotFoundError",
+    "BaselineBuilder",
+    "TrainingResult",
+]
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checkers only
     from behaveguard.models.autoencoder import BehaviorAutoencoder

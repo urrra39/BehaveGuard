@@ -12,14 +12,41 @@ def layout() -> Any:
 
     summary_cards = dbc.Row(
         [
-            dbc.Col(dbc.Card(dbc.CardBody([html.H6("Monitored processes"),
-                                           html.H3(id="ov-proc-count", children="0")])), width=3),
-            dbc.Col(dbc.Card(dbc.CardBody([html.H6("Unacknowledged alerts"),
-                                           html.H3(id="ov-alert-count", children="0")])), width=3),
-            dbc.Col(dbc.Card(dbc.CardBody([html.H6("Trained models"),
-                                           html.H3(id="ov-model-count", children="0")])), width=3),
-            dbc.Col(dbc.Card(dbc.CardBody([html.H6("Max severity"),
-                                           html.H3(id="ov-max-severity", children="LOW")])), width=3),
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        [html.H6("Monitored processes"), html.H3(id="ov-proc-count", children="0")]
+                    )
+                ),
+                width=3,
+            ),
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        [
+                            html.H6("Unacknowledged alerts"),
+                            html.H3(id="ov-alert-count", children="0"),
+                        ]
+                    )
+                ),
+                width=3,
+            ),
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        [html.H6("Trained models"), html.H3(id="ov-model-count", children="0")]
+                    )
+                ),
+                width=3,
+            ),
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        [html.H6("Max severity"), html.H3(id="ov-max-severity", children="LOW")]
+                    )
+                ),
+                width=3,
+            ),
         ],
         className="my-3",
     )
@@ -30,17 +57,25 @@ def layout() -> Any:
             dbc.Row(
                 [
                     dbc.Col(
-                        dbc.Card(dbc.CardBody([
-                            html.H5("Process anomaly heatmap"),
-                            dcc.Graph(id="overview-heatmap"),
-                        ])),
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Process anomaly heatmap"),
+                                    dcc.Graph(id="overview-heatmap"),
+                                ]
+                            )
+                        ),
                         width=7,
                     ),
                     dbc.Col(
-                        dbc.Card(dbc.CardBody([
-                            html.H5("Top suspicious processes"),
-                            dcc.Graph(id="top-procs"),
-                        ])),
+                        dbc.Card(
+                            dbc.CardBody(
+                                [
+                                    html.H5("Top suspicious processes"),
+                                    dcc.Graph(id="top-procs"),
+                                ]
+                            )
+                        ),
                         width=5,
                     ),
                 ]

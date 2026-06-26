@@ -28,12 +28,21 @@ from behaveguard.collector.event_types import (
 )
 
 CAP_SPAWNS = 20.0
-CAP_NAMESPACE = 5.0   # namespace changes -> a couple already looks like escape prep
-CAP_LOLBIN = 10.0     # LOLBin executions per window
+CAP_NAMESPACE = 5.0  # namespace changes -> a couple already looks like escape prep
+CAP_LOLBIN = 10.0  # LOLBin executions per window
 
 # Interactive shells whose appearance under an unexpected parent is suspicious.
 SHELLS = {
-    "sh", "bash", "zsh", "dash", "ksh", "fish", "csh", "tcsh", "ash", "busybox",
+    "sh",
+    "bash",
+    "zsh",
+    "dash",
+    "ksh",
+    "fish",
+    "csh",
+    "tcsh",
+    "ash",
+    "busybox",
 }
 
 # Syscalls that change credentials, trace other processes, or alter process
@@ -51,8 +60,21 @@ PRIV_ESC_SYSCALLS = {
 # of aliases per name (e.g. python3 counts as python) since ``comm`` carries the
 # concrete binary name.
 LOLBIN_WATCHLIST = [
-    "wget", "curl", "python", "perl", "bash", "nc", "ncat", "socat",
-    "base64", "xxd", "dd", "crontab", "at", "systemctl", "chmod",
+    "wget",
+    "curl",
+    "python",
+    "perl",
+    "bash",
+    "nc",
+    "ncat",
+    "socat",
+    "base64",
+    "xxd",
+    "dd",
+    "crontab",
+    "at",
+    "systemctl",
+    "chmod",
 ]
 _LOLBIN_ALIASES = {
     "python": {"python", "python3", "python2"},
@@ -124,8 +146,8 @@ class ProcessFeatureExtractor:
                 shell_spawned = 1.0
 
         priv_esc = 0.0
-        for event in syscall_events:
-            if int(event.syscall_nr) in PRIV_ESC_SYSCALLS:
+        for syscall_event in syscall_events:
+            if int(syscall_event.syscall_nr) in PRIV_ESC_SYSCALLS:
                 priv_esc = 1.0
                 break
 

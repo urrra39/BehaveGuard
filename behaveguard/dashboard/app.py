@@ -18,7 +18,9 @@ from typing import Any, Dict, List, Optional
 class DashboardDataClient:
     """Minimal REST client the dashboard polls for live data."""
 
-    def __init__(self, base_url: str = "http://localhost:8888", token: Optional[str] = None) -> None:
+    def __init__(
+        self, base_url: str = "http://localhost:8888", token: Optional[str] = None
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.token = token
 
