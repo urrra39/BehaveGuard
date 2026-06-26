@@ -39,7 +39,7 @@ class FeatureNormalizer:
         self.std_: Any = None
         self.fitted: bool = False
 
-    def fit(self, X: "np.ndarray") -> "FeatureNormalizer":  # noqa: N803
+    def fit(self, X: Any) -> "FeatureNormalizer":  # noqa: N803
         """Learn per-feature statistics from ``X``, a ``(n_samples, n_features)`` matrix.
 
         ``X`` keeps its conventional ML capitalization (hence the N803 waiver).
@@ -64,7 +64,7 @@ class FeatureNormalizer:
         if not self.fitted:
             raise NormalizerNotFittedError("FeatureNormalizer.fit must be called first")
 
-    def transform_minmax(self, x: "np.ndarray") -> "np.ndarray":
+    def transform_minmax(self, x: Any) -> "np.ndarray":
         """MinMax-normalize a vector (or batch), clipping to ``[0, 1]``."""
         import numpy as np
 
@@ -75,7 +75,7 @@ class FeatureNormalizer:
         scaled = (vec - self.min_) / safe_span
         return np.clip(scaled, 0.0, 1.0)
 
-    def transform_zscore(self, x: "np.ndarray") -> "np.ndarray":
+    def transform_zscore(self, x: Any) -> "np.ndarray":
         """Z-score normalize, clip to ``[-3, 3]``, then rescale to ``[0, 1]``."""
         import numpy as np
 
@@ -85,7 +85,7 @@ class FeatureNormalizer:
         z = np.clip(z, -3.0, 3.0)
         return (z + 3.0) / 6.0
 
-    def transform(self, x: "np.ndarray", method: str = "minmax") -> "np.ndarray":
+    def transform(self, x: Any, method: str = "minmax") -> "np.ndarray":
         """Apply the selected normalization ``method`` (``minmax`` or ``zscore``)."""
         if method == "minmax":
             return self.transform_minmax(x)
