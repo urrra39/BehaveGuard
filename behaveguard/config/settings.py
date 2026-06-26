@@ -71,17 +71,20 @@ class ScoringSettings(BaseModel):
     alert_threshold_critical: int = 90
 
 
+def _default_alert_channels() -> List[Dict[str, Any]]:
+    """Default alert channels (typed so the field's value type is unambiguous)."""
+    return [
+        {"type": "webhook", "url": ""},
+        {"type": "syslog", "enabled": True},
+    ]
+
+
 class AlertSettings(BaseModel):
     """Alert routing, deduplication, and rate limiting."""
 
     dedup_window_seconds: int = 300
     max_alerts_per_minute: int = 10
-    channels: List[Dict[str, Any]] = Field(
-        default_factory=lambda: [
-            {"type": "webhook", "url": ""},
-            {"type": "syslog", "enabled": True},
-        ]
-    )
+    channels: List[Dict[str, Any]] = Field(default_factory=_default_alert_channels)
 
 
 class ApiSettings(BaseModel):
